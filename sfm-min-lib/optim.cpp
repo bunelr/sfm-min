@@ -1,4 +1,6 @@
+#include "optim.hpp"
 
-double square(double nb){
-    return nb * nb;
+
+double SF::evaluate(Subset picked){
+    return 2;
 }
