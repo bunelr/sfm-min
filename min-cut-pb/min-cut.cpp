@@ -1,6 +1,5 @@
 #include "min-cut.hpp"
 
-
 MinCut::MinCut(std::string path_to_data){
     graph = Graph(path_to_data);
 }
