@@ -1,5 +1,6 @@
 #include <iostream>
 #include "min-cut.hpp"
+#include <vector>
 #include <cassert>
 
 MinCut::MinCut(std::string path_to_data){
@@ -39,6 +40,33 @@ double MinCut::cut_from_node(const Node& node, const Subset& picked) const{
     }
     return cut_value;
 }
+
+double MinCut::maxflow() const {
+    // Find the maxflow, using Dinic's algorithm
+    double flow_value = 0;
+
+    Graph residual_graph = graph;// Is it a proper copy?
+    bool finding_st_path = true;
+
+    std::vector<uint> st_path;
+    while(finding_st_path){
+        // Finding the shortest st path
+        st_path.clear();
+        finding_st_path = residual_graph.shortest_path(source_node, sink_node, st_path);
+
+        // Find the maximum allowable flow
+
+
+        // Update the flow value and the residual graph
+
+
+    }
+
+
+    return flow_value;
+}
+
+
 
 MinCut* create_min_cut_pb(std::string path_to_data){
     MinCut* mc_pb = new MinCut(path_to_data);

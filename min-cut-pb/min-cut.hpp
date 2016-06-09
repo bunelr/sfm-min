@@ -7,6 +7,7 @@ class MinCut: public SF {
 public:
     MinCut(std::string path_to_data);
     double evaluate(const Subset& picked) const;
+    double maxflow() const;
 private:
     double cut_from_node(const Node& node, const Subset& picked) const;
 };
