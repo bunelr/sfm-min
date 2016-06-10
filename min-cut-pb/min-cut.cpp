@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <limits>
 #include "min-cut.hpp"
 #include <vector>
 #include <cassert>
@@ -55,11 +57,28 @@ double MinCut::maxflow() const {
         finding_st_path = residual_graph.shortest_path(source_node, sink_node, st_path);
 
         // Find the maximum allowable flow
-
+        double max_passable_flow = std::numeric_limits<double>::max();
+        uint from_index = 0;
+        uint from = st_path[from_index];
+        uint to = st_path[from_index+1];
+        Node from_node = graph.nodes[from];
+        while (from != sink_node) {
+            // Find the arc to look at it's capacity
+            for (const auto& edge: from_node.outarcs) {
+                if (edge.to==to) {
+                    max_passable_flow = std::min(max_passable_flow, edge.capacity);
+                    from_index++;
+                    from = to;
+                    to = st_path[from_index+1];
+                    break;
+                }
+            }
+        }
 
         // Update the flow value and the residual graph
+        residual_graph.pass_flow(st_path, max_passable_flow);
 
-
+        flow_value += max_passable_flow;
     }
 
 

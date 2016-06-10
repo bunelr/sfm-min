@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
     MinCut* mc_pb = create_min_cut_pb(argv[1]);
     Subset picked = {0};
-    double cut_value = mc_pb->evaluate(picked);
-    std::cout << cut_value << '\n';
+    double max_value = mc_pb->maxflow();
+    std::cout << max_value << '\n';
     return 0;
 }

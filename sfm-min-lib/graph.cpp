@@ -1,10 +1,11 @@
 #include <algorithm>
-#include <vector>
-#include <limits>
+#include <cassert>
 #include <fstream>
+#include <limits>
+#include <queue>
 #include <sstream>
 #include <string>
-#include <queue>
+#include <vector>
 #include "graph.hpp"
 
 Node::Node(uint x, std::vector<Edge> outarcs):id(x), outarcs(outarcs) {}
@@ -84,4 +85,61 @@ bool Graph::shortest_path(uint source_node, uint target_node, std::vector<uint>&
                 return true;
         }
         return false;
+}
+
+void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
+        // Adapt the residual graph according to the new flow going through path
+
+        uint path_index = 0;
+        uint from = path[path_index];
+        uint to = path[path_index+1];
+        Node from_node = nodes[from];
+        Node to_node = nodes[to];
+        uint end_node_idx = path.back();
+
+        while (from != end_node_idx) {
+                // Find the arc to look at it's capacity
+                for (std::vector<Edge>::iterator edge = from_node.outarcs.begin();
+                     edge!=from_node.outarcs.end(); ++edge) {
+                        if (edge->to==to) {
+                                // Found the correct edge
+
+                                // Add the reverse edge
+                                // Make sure that we don't duplicate edges
+                                bool already_existing_edge = false;
+                                for (auto& rev_edge: to_node.outarcs){
+                                        if(rev_edge.to = from){
+                                                // The edge already exists, just need to augment its value
+                                                rev_edge.capacity += flow_value;
+                                                already_existing_edge = true;
+                                                break;
+                                        }
+                                }
+                                // The reverse edge does not already exist, we can just create it.
+                                if (not already_existing_edge) {
+                                        Edge new_edge(to, from, flow_value);
+                                        to_node.outarcs.push_back(new_edge);
+                                }
+
+
+                                if (edge->capacity == flow_value) {
+                                        // If the edge is saturated, remove it
+                                        from_node.outarcs.erase(edge);
+                                } else {
+                                        // Otherwise, just lower the capacity
+                                        assert(flow_value < edge->capacity);
+                                        edge->capacity -= flow_value;
+                                }
+
+                                // Go handle the next edge
+                                path_index++;
+                                from = to;
+                                to = path[path_index+1];
+                                from_node = to_node;
+                                to_node = nodes[to];
+                                break;
+                        }
+                }
+        }
+
 }
