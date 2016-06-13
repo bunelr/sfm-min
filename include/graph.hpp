@@ -1,6 +1,11 @@
 #ifndef GRAPH
 #define GRAPH
 #include<vector>
+#include <unordered_set>
+
+typedef std::unordered_set<uint> Subset;
+
+void display_subset(const Subset&);
 
 typedef unsigned int uint;
 
@@ -37,6 +42,7 @@ public:
         Graph(){};
 
         bool shortest_path(uint source_node, uint target_node, std::vector<uint>& path) const;
+        void reachable(uint source_node, Subset& picked) const;
         void pass_flow(const std::vector<uint>& path, double flow_value);
 };
 

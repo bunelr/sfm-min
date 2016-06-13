@@ -43,11 +43,11 @@ double MinCut::cut_from_node(const Node& node, const Subset& picked) const{
     return cut_value;
 }
 
-double MinCut::maxflow() const {
+double MinCut::maxflow(Subset& picked) const {
     // Find the maxflow, using Dinic's algorithm
     double flow_value = 0;
 
-    Graph residual_graph = graph;// Is it a proper copy?
+    Graph residual_graph = graph;
     bool finding_st_path = true;
 
     std::vector<uint> st_path;
@@ -84,10 +84,12 @@ double MinCut::maxflow() const {
         flow_value += max_passable_flow;
     }
 
+    // Find all the elements that are in S
+    residual_graph.reachable(source_node, picked);
+
 
     return flow_value;
 }
-
 
 
 MinCut* create_min_cut_pb(std::string path_to_data){

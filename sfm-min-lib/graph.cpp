@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <queue>
 #include <sstream>
@@ -8,10 +9,18 @@
 #include <vector>
 #include "graph.hpp"
 
+void display_subset(const Subset& picked){
+        for (auto& node: picked) {
+                std::cout << node  << ' ';
+        }
+        std::cout << '\n';
+
+}
+
+
 Node::Node(uint x, std::vector<Edge> outarcs):id(x), outarcs(outarcs) {}
 
 Edge::Edge(uint from, uint to, double weight): from(from), to(to), capacity(weight) {}
-
 
 Graph::Graph(std::string path){
 
@@ -137,4 +146,32 @@ void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
                 }
         }
 
+}
+
+void Graph::reachable(uint source_node, Subset& picked) const{
+        // Perform a breadth first search to find all the reachable node from the sources
+        // Put the index of all reachable nodes in 'picked'
+        std::vector<bool> visited(nodes.size(), false);
+        std::queue<uint> to_explore;
+        std::vector<Edge> outarcs;
+        uint current_node;
+        to_explore.push(source_node);
+
+
+        while(true){
+                if (to_explore.empty()) {
+                        break;
+                }
+                current_node = to_explore.front();
+                to_explore.pop();
+
+                outarcs = nodes[current_node].outarcs;
+                for (const auto& edge: outarcs) {
+                        if (not visited[edge.to]) {
+                                visited[edge.to] = true;
+                                to_explore.push(edge.to);
+                                picked.insert(edge.to);
+                        }
+                }
+        }
 }
