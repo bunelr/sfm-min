@@ -51,17 +51,20 @@ double MinCut::maxflow() const {
     bool finding_st_path = true;
 
     std::vector<uint> st_path;
-    while(finding_st_path){
+    while(true){
         // Finding the shortest st path
         st_path.clear();
         finding_st_path = residual_graph.shortest_path(source_node, sink_node, st_path);
+        if(not finding_st_path){
+            break;
+        }
 
         // Find the maximum allowable flow
         double max_passable_flow = std::numeric_limits<double>::max();
         uint from_index = 0;
         uint from = st_path[from_index];
         uint to = st_path[from_index+1];
-        Node from_node = graph.nodes[from];
+        Node from_node = residual_graph.nodes[from];
         while (from != sink_node) {
             // Find the arc to look at it's capacity
             for (const auto& edge: from_node.outarcs) {
@@ -69,12 +72,12 @@ double MinCut::maxflow() const {
                     max_passable_flow = std::min(max_passable_flow, edge.capacity);
                     from_index++;
                     from = to;
+                    from_node = residual_graph.nodes[from];
                     to = st_path[from_index+1];
                     break;
                 }
             }
         }
-
         // Update the flow value and the residual graph
         residual_graph.pass_flow(st_path, max_passable_flow);
 

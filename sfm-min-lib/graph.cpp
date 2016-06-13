@@ -93,22 +93,19 @@ void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
         uint path_index = 0;
         uint from = path[path_index];
         uint to = path[path_index+1];
-        Node from_node = nodes[from];
-        Node to_node = nodes[to];
         uint end_node_idx = path.back();
 
         while (from != end_node_idx) {
                 // Find the arc to look at it's capacity
-                for (std::vector<Edge>::iterator edge = from_node.outarcs.begin();
-                     edge!=from_node.outarcs.end(); ++edge) {
+                for (std::vector<Edge>::iterator edge = nodes[from].outarcs.begin();
+                     edge!=nodes[from].outarcs.end(); ++edge) {
                         if (edge->to==to) {
                                 // Found the correct edge
-
                                 // Add the reverse edge
                                 // Make sure that we don't duplicate edges
                                 bool already_existing_edge = false;
-                                for (auto& rev_edge: to_node.outarcs){
-                                        if(rev_edge.to = from){
+                                for (auto& rev_edge: nodes[to].outarcs){
+                                        if(rev_edge.to == from){
                                                 // The edge already exists, just need to augment its value
                                                 rev_edge.capacity += flow_value;
                                                 already_existing_edge = true;
@@ -118,13 +115,13 @@ void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
                                 // The reverse edge does not already exist, we can just create it.
                                 if (not already_existing_edge) {
                                         Edge new_edge(to, from, flow_value);
-                                        to_node.outarcs.push_back(new_edge);
+                                        nodes[to].outarcs.push_back(new_edge);
                                 }
 
 
                                 if (edge->capacity == flow_value) {
                                         // If the edge is saturated, remove it
-                                        from_node.outarcs.erase(edge);
+                                        nodes[from].outarcs.erase(edge);
                                 } else {
                                         // Otherwise, just lower the capacity
                                         assert(flow_value < edge->capacity);
@@ -135,8 +132,6 @@ void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
                                 path_index++;
                                 from = to;
                                 to = path[path_index+1];
-                                from_node = to_node;
-                                to_node = nodes[to];
                                 break;
                         }
                 }
