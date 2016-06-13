@@ -36,7 +36,7 @@ public:
         Graph(std::string path);
         Graph(){};
 
-        bool shortest_path(uint source_node, uint target_node, std::vector<uint>& path);
+        bool shortest_path(uint source_node, uint target_node, std::vector<uint>& path) const;
         void pass_flow(const std::vector<uint>& path, double flow_value);
 };
 

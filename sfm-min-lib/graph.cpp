@@ -38,7 +38,7 @@ Graph::Graph(std::string path){
         }
 }
 
-bool Graph::shortest_path(uint source_node, uint target_node, std::vector<uint>& path){
+bool Graph::shortest_path(uint source_node, uint target_node, std::vector<uint>& path) const {
         // Perform a breadth first search to find the shortest path
         // from source_node to target_node
         // Returns a boolean indicating whether a path was found
