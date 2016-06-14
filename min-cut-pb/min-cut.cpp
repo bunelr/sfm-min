@@ -29,7 +29,7 @@ double MinCut::evaluate(const Subset& picked) const{
     Node current_node = graph.nodes[source_node];
     cut_value += cut_from_node(current_node, picked);
 
-    for (const auto& node_idx: picked) {
+    for (const uint& node_idx: picked) {
         current_node = graph.nodes[node_idx];
         cut_value += cut_from_node(current_node, picked);
     }
@@ -39,7 +39,7 @@ double MinCut::evaluate(const Subset& picked) const{
 
 double MinCut::cut_from_node(const Node& node, const Subset& picked) const{
     double cut_value = 0;
-    for (const auto& edge: node.outarcs) {
+    for (const Edge& edge: node.outarcs) {
         if (picked.find(edge.to)==picked.end()) {
             cut_value += edge.capacity;
         }
@@ -71,7 +71,7 @@ double MinCut::maxflow(Subset& picked) const {
         Node from_node = residual_graph.nodes[from];
         while (from != sink_node) {
             // Find the arc to look at it's capacity
-            for (const auto& edge: from_node.outarcs) {
+            for (const Edge& edge: from_node.outarcs) {
                 if (edge.to==to) {
                     max_passable_flow = std::min(max_passable_flow, edge.capacity);
                     from_index++;

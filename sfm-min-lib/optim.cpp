@@ -7,7 +7,7 @@ Order::Order(ordering ordered_elts, const SF *const problem): _ordered_elts(orde
     double prev, current;
 
     prev = problem->evaluate(picked);
-    for(auto& elt : ordered_elts){
+    for(const uint& elt : ordered_elts){
         picked.insert(elt);
         current = problem->evaluate(picked);
         greedy_vec.at(elt) = current - prev;

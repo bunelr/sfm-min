@@ -10,11 +10,10 @@
 #include "graph.hpp"
 
 void display_subset(const Subset& picked){
-        for (auto& node: picked) {
+        for (const uint& node: picked) {
                 std::cout << node  << ' ';
         }
         std::cout << '\n';
-
 }
 
 
@@ -69,7 +68,7 @@ bool Graph::shortest_path(uint source_node, uint target_node, std::vector<uint>&
                 to_explore.pop();
 
                 outarcs = nodes[current_node].outarcs;
-                for (const auto& edge: outarcs) {
+                for (const Edge& edge: outarcs) {
                         if (father_node[edge.to]==unvisited) {
                                 father_node[edge.to] = edge.from;
                                 if (edge.to==target_node) {
@@ -113,7 +112,7 @@ void Graph::pass_flow(const std::vector<uint>& path, double flow_value){
                                 // Add the reverse edge
                                 // Make sure that we don't duplicate edges
                                 bool already_existing_edge = false;
-                                for (auto& rev_edge: nodes[to].outarcs){
+                                for (Edge& rev_edge: nodes[to].outarcs){
                                         if(rev_edge.to == from){
                                                 // The edge already exists, just need to augment its value
                                                 rev_edge.capacity += flow_value;
@@ -166,7 +165,7 @@ void Graph::reachable(uint source_node, Subset& picked) const{
                 to_explore.pop();
 
                 outarcs = nodes[current_node].outarcs;
-                for (const auto& edge: outarcs) {
+                for (const Edge& edge: outarcs) {
                         if (not visited[edge.to]) {
                                 visited[edge.to] = true;
                                 to_explore.push(edge.to);
