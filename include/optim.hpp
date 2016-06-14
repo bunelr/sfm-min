@@ -17,10 +17,11 @@ public:
 
 class Order{
     ordering _ordered_elts;
+public:
     vec greedy_vec;
 
-public:
     Order(ordering ordered_elts, const SF *const  problem);
+    uint at(uint pos) const;
 };
 
 

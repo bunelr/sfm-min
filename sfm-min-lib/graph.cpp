@@ -30,12 +30,21 @@ Graph::Graph(uint nb_nodes){
 }
 
 void Graph::add_edge(Edge edge){
-        for (Edge& existing_edge: nodes.at(edge.from).outarcs) {
+        for (const Edge& existing_edge: nodes.at(edge.from).outarcs) {
                 // We don't want to allow to create edges that already
                 // exist
                 assert(existing_edge.to != edge.to);// Maybe should replace this with exceptions
         }
         nodes.at(edge.from).outarcs.push_back(edge);
+}
+
+bool Graph::exist_edge(uint from, uint to){
+        for (const Edge& existing_edge: nodes.at(from).outarcs) {
+                if (existing_edge.to == to) {
+                        return true;
+                }
+        }
+        return false;
 }
 
 Graph::Graph(std::string path){
@@ -190,4 +199,37 @@ void Graph::reachable(uint source_node, Subset& picked) const{
                         }
                 }
         }
+}
+
+bool Graph::path_exist(const Subset& from, const Subset& to){
+        std::vector<bool> visited(nodes.size(), false);
+        std::queue<uint> to_explore;
+        std::vector<Edge> outarcs;
+        uint current_node;
+
+        for(const uint& src: from){
+                visited[src] = true;
+                to_explore.push(src);
+        }
+
+        while(true){
+                if (to_explore.empty()) {
+                        break;
+                }
+                current_node = to_explore.front();
+                to_explore.pop();
+
+                outarcs = nodes[current_node].outarcs;
+                for (const Edge& edge: outarcs) {
+                        if (not visited[edge.to]) {
+                                if (to.count(edge.to)>0) { // We can reach an element of the target subset
+                                        return true;
+                                } else{
+                                        visited[edge.to] = true;
+                                        to_explore.push(edge.to);
+                                }
+                        }
+                }
+        }
+        return false;
 }

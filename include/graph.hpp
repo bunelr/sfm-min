@@ -46,10 +46,14 @@ public:
 
         void add_edge(Edge edge);
 
-        // Methods
+        // Simple queries
+        bool exist_edge(uint from, uint to);
+
+        // Algorithmic Methods
         bool shortest_path(uint source_node, uint target_node, std::vector<uint>& path) const;
         void reachable(uint source_node, Subset& picked) const;
         void pass_flow(const std::vector<uint>& path, double flow_value);
+        bool path_exist(const Subset& from, const Subset& to);
 };
 
 #endif
