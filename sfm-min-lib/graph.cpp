@@ -21,6 +21,23 @@ Node::Node(uint x, std::vector<Edge> outarcs):id(x), outarcs(outarcs) {}
 
 Edge::Edge(uint from, uint to, double weight): from(from), to(to), capacity(weight) {}
 
+Graph::Graph(uint nb_nodes){
+        for (uint i=0; i<nb_nodes; i++) {
+                std::vector<Edge> new_outarcs;
+                Node new_node = Node(i, new_outarcs);
+                nodes.push_back(new_node);
+        }
+}
+
+void Graph::add_edge(Edge edge){
+        for (Edge& existing_edge: nodes.at(edge.from).outarcs) {
+                // We don't want to allow to create edges that already
+                // exist
+                assert(existing_edge.to != edge.to);// Maybe should replace this with exceptions
+        }
+        nodes.at(edge.from).outarcs.push_back(edge);
+}
+
 Graph::Graph(std::string path){
 
         std::ifstream file(path.c_str());

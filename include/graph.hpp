@@ -35,12 +35,18 @@ public:
 class Graph {
 
 public:
+        // Properties
         std::vector<Node> nodes;
         uint edge_nb;
 
-        Graph(std::string path);
+        // Constructors
         Graph(){};
+        Graph(std::string path);
+        Graph(uint nb_nodes);
 
+        void add_edge(Edge edge);
+
+        // Methods
         bool shortest_path(uint source_node, uint target_node, std::vector<uint>& path) const;
         void reachable(uint source_node, Subset& picked) const;
         void pass_flow(const std::vector<uint>& path, double flow_value);
