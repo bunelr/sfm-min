@@ -7,9 +7,13 @@
 
 MinCut::MinCut(std::string path_to_data){
     graph = Graph(path_to_data);
-    uint nb_nodes = graph.nodes.size();
+    nb_nodes = graph.nodes.size();
     source_node = nb_nodes-2;
     sink_node = nb_nodes-1;
+}
+
+uint MinCut::dimension() const{
+    return nb_nodes-2;
 }
 
 double MinCut::evaluate(const Subset& picked) const{
