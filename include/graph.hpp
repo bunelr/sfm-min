@@ -54,6 +54,7 @@ public:
         void reachable(uint source_node, Subset& picked) const;
         void pass_flow(const std::vector<uint>& path, double flow_value);
         bool path_exist(const Subset& from, const Subset& to);
+        std::vector<uint> distance_from(const Subset& from);
 };
 
 #endif

@@ -233,3 +233,34 @@ bool Graph::path_exist(const Subset& from, const Subset& to){
         }
         return false;
 }
+
+
+std::vector<uint> Graph::distance_from(const Subset& from){
+        uint max_value = std::numeric_limits<uint>::max();
+        std::vector<uint> d(nodes.size(), max_value);
+        std::queue<uint> to_explore;
+        std::vector<Edge> outarcs;
+        uint current_node;
+
+        for(const uint& src: from){
+                d[src] = 0;
+                to_explore.push(src);
+        }
+
+        while(true){
+                if (to_explore.empty()) {
+                        break;
+                }
+                current_node = to_explore.front();
+                to_explore.pop();
+
+                outarcs = nodes[current_node].outarcs;
+                for (const Edge& edge: outarcs) {
+                        if (d[edge.to] == max_value) {
+                                d[edge.to] = d[edge.from] + 1;
+                                to_explore.push(edge.to);
+                        }
+                }
+        }
+        return d;
+}

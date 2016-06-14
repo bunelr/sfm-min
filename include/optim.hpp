@@ -21,7 +21,9 @@ public:
     vec greedy_vec;
 
     Order(ordering ordered_elts, const SF *const  problem);
+    uint nb_intermediary(uint from, uint to) const;
     uint at(uint pos) const;
+    std::vector<ordering> generate_new_orderings(uint from, uint to) const;
 };
 
 
