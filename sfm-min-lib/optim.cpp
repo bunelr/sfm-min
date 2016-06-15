@@ -1,5 +1,6 @@
 #include "optim.hpp"
 #include <iostream>
+#include <cmath>
 #include <algorithm>
 #include <limits>
 #include <cassert>
@@ -177,7 +178,8 @@ double SF::minimize(){
                     }
                 }
             }
-
+            std::cout << "s is: " << s << '\n';
+            std::cout << "t is: " << t << '\n';
 
             assert(d[t]==(d[s]+1));
             // Take the ordering with maximal difference between s and t
@@ -191,7 +193,13 @@ double SF::minimize(){
                     argmax_nb_intermediary = i;
                 }
             }
-            assert(max_nb_intermediary < nb_elements); // what we want to check is that it's less than 0, but given that we use uints
+            assert(max_nb_intermediary < nb_elements); // what we want
+                                                       // to check is
+                                                       // that it's
+                                                       // less than 0,
+                                                       // but given
+                                                       // that we use
+                                                       // uints
 
 
             // Generate new orderings, where in each, one element from
@@ -207,7 +215,8 @@ double SF::minimize(){
 
             double delta;
             std::vector<double> new_ord_weights(new_orders.size());
-            // Find the convex combination of greedy-vector of new_ordering that gives \mu ( \delta_t - \delta_s)
+            // Find the convex combination of greedy-vector of new_ordering that gives
+            //                greedy_of_ordering + \delta ( I_t - I_s)
             // Generate the matrix, the rows correspond to the orders, indexed by u in the appropriate order.
             // The colons contains the greedy vec, in the appropriate order
             Order& base_order = all_orders[argmax_nb_intermediary];
@@ -243,6 +252,13 @@ double SF::minimize(){
             if (zero_valid_delta) {
                 new_ord_weights[row_zero_valid_delta] = 1;
                 delta = 0;
+                // Verify that this means that they had the same greedy vector
+                std::cout << "Zero is a valid delta" << '\n';
+                vec& ref = base_order.greedy_vec;
+                vec& rep = new_orders[row_zero_valid_delta].greedy_vec;
+                for (uint i=0; i<ref.size(); i++) {
+                    assert(abs(ref[i]-rep[i]) < std::numeric_limits<double>::epsilon());
+                }
             } else{
                 std::vector<double> current(nb_elem_considered, 0);
                 for (int i=new_orders.size()-1; i >= 0; i--) {
@@ -282,19 +298,75 @@ double SF::minimize(){
                     w = w*delta;
                 }
             }
-            // std::cout << "Delta is: " << delta << '\n';
-            // std::cout << "Weights are: ";
-            // for (const double& node: new_ord_weights) {
-            //     std::cout << node  << ' ';
-            // }
-            // std::cout << '\n';
+            std::cout << "Delta is: " << delta << '\n';
+            std::cout << "Weights on the new orderings are: ";
+            for (const double& node: new_ord_weights) {
+                std::cout << node  << ' ';
+            }
+            std::cout << '\n';
 
 
-// Find y
+            // Find y
+            vec y = x;
+            double lambda_1 = order_weights[argmax_nb_intermediary];
+            y[s] -= lambda_1 * delta;
+            y[t] += lambda_1 * delta;
 
-// Find the new value of x -> x' by taking the point closest to y that has x'(t) =< 0
+            // Find the new value of x -> x' by taking the point closest to y that has x'(t) =< 0
+            vec new_x;
+            double partial_multiplier = 1;
+            if (y[t] <= 0) {
+                std::cout << "Gone full y" << '\n';
+                new_x = y;
+                all_orders.erase(all_orders.begin() + argmax_nb_intermediary);
+                order_weights.erase(order_weights.begin() + argmax_nb_intermediary);
+            } else {
+                std::cout << "Partially y" << '\n';
+                new_x = x;
+                new_x[s] += new_x[t];
+                partial_multiplier = -new_x[t] / delta;
+                new_x[t] = 0;
+                // Because we are only doing a partial application of our update vector,
+                // we need to keep the original ordering, to preserve convexity of the combination.
+                // (As opposed to the other branch where we can get rid of it)
+                order_weights[argmax_nb_intermediary] *= (1-partial_multiplier);
+            }
 
-// Adjust the convex combination to have less than nb_elements Order
+
+            // Add the new ordering and the related weights to the maintained list
+            for (Order new_ord: new_orders) {
+                all_orders.push_back(new_ord);
+            }
+            for (double new_weight: new_ord_weights) {
+                order_weights.push_back(new_weight * lambda_1 * partial_multiplier);
+            }
+
+            // Check that we haven't made any mistake and that we still have x as a convex combination.
+            double sum_order_weights = 0;
+            for (double& w: order_weights) {
+                sum_order_weights += w;
+            }
+            // std::cout << "Error on the sum of the weights: " << sum_order_weights-1 << '\n';
+            // std::cout << "Smallest admissible error: " << std::numeric_limits<double>::epsilon() << '\n';
+            assert(abs(sum_order_weights-1)< std::numeric_limits<double>::epsilon());
+            vec reconstructed_x(nb_elements, 0);
+            for (uint i=0; i < all_orders.size(); i++) {
+                double weight = order_weights[i];
+                vec& greedy_vec = all_orders[i].greedy_vec;
+                for (uint j = 0; j < nb_elements; j++) {
+                    reconstructed_x[j] += weight * greedy_vec[j];
+                }
+            }
+            for (uint i=0; i < nb_elements; i++) {
+                if (abs(reconstructed_x[i] - new_x[i]) > std::numeric_limits<double>::epsilon()) {
+                    std::cout << "Error at position " << i <<
+                        ": "<<  reconstructed_x[i] <<
+                        " versus " << new_x[i] << '\n';
+                }
+                //assert(reconstructed_x[i] == new_x[i]);
+            }
+
+
 
         }
         break; // Safety break during development
