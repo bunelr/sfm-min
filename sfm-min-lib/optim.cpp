@@ -363,10 +363,46 @@ double SF::minimize(){
                         ": "<<  reconstructed_x[i] <<
                         " versus " << new_x[i] << '\n';
                 }
-                //assert(reconstructed_x[i] == new_x[i]);
+                assert(abs(reconstructed_x[i] - new_x[i]) < std::numeric_limits<double>::epsilon());
+            }
+            x = new_x;
+
+            // We now have a valid combination of greedy vectors associated with our orderings.
+            // Let's make it diet a bit
+
+            // All the orderings that have zero weight in the current linear combination should be removed
+            uint ordering_index = 0;
+            while (ordering_index < order_weights.size()) {
+                if (order_weights[ordering_index]==0) {
+                    all_orders.erase(all_orders.begin() + ordering_index);
+                    order_weights.erase(order_weights.begin() + ordering_index);
+                } else {
+                    ordering_index++;
+                }
             }
 
+            // Verification code that nothing problematic happened here
+            std::fill(reconstructed_x.begin(), reconstructed_x.end(), 0);
+            for (uint i=0; i < all_orders.size(); i++) {
+                double weight = order_weights[i];
+                vec& greedy_vec = all_orders[i].greedy_vec;
+                for (uint j = 0; j < nb_elements; j++) {
+                    reconstructed_x[j] += weight * greedy_vec[j];
+                }
+            }
+            for (uint i=0; i < nb_elements; i++) {
+                if (abs(reconstructed_x[i] - x[i]) > std::numeric_limits<double>::epsilon()) {
+                    std::cout << "Error at position " << i <<
+                        ": "<<  reconstructed_x[i] <<
+                        " versus " << x[i] << '\n';
+                }
+                assert(abs(reconstructed_x[i] - x[i]) < std::numeric_limits<double>::epsilon());
+            }
 
+            if (all_orders.size() > nb_elements + 1) {
+                // Time to do some linear algebra
+                assert(false);
+            }
 
         }
         break; // Safety break during development
