@@ -29,6 +29,14 @@ Order::Order(ordering ordered_elts, const SF *const problem): _ordered_elts(orde
     }
 }
 
+void Order::show_ordering() const{
+    for (const uint& node: _ordered_elts ) {
+        std::cout << node << ' ';
+    }
+    std::cout << '\n';
+
+}
+
 uint Order::at(uint pos) const{
     return _ordered_elts.at(pos);
 }
@@ -46,7 +54,9 @@ uint Order::pos_in_ordering(uint node_idx) const {
 uint Order::nb_intermediary(uint from, uint to) const{
     uint s_pos = pos_in_ordering(from);
     uint t_pos = pos_in_ordering(to);
-
+    if (t_pos < s_pos) {
+        return 0;
+    }
     return t_pos - s_pos;
 }
 
@@ -125,12 +135,14 @@ double SF::minimize(){
         }
 
         // Identify subsets P {u s.t. x(u) > 0}  and N {u s.t. x(u) < 0}
-        Subset P,N;
+        Subset P,N, neutral;
         for (uint i=0; i<nb_elements; ++i) {
             if (x.at(i) > 0) {
                 P.insert(i);
             } else if (x.at(i) < 0) {
                 N.insert(i);
+            } else {
+                neutral.insert(i);
             }
         }
 
@@ -140,10 +152,24 @@ double SF::minimize(){
             // There is no path from P to N
             // We have found the minimiser.
 
+
             // Find all vertices that have a path to N.
             // This is easy to find because this is all of N, and some
             // of the elements that are neither in P nor N.
-            // This corresponds to the solution.
+
+            // For every element of Neutral, check whether it can reach N
+            Subset dummy_subset;
+            for (const uint& src: neutral) {
+                dummy_subset = {src};
+                assert(dummy_subset.size()==1);
+                if (ordering_graph.path_exist(dummy_subset, N)) {
+                    N.insert(src);
+                }
+            }
+
+            std::cout << "Found a solution" << '\n';
+            // Compute the value by summming all x(N) now
+            // TODO
             break;
         } else {
             // There is a path from P to N
@@ -178,8 +204,8 @@ double SF::minimize(){
                     }
                 }
             }
-            std::cout << "s is: " << s << '\n';
-            std::cout << "t is: " << t << '\n';
+            std::cout << "s is: " << s << ", Distance is " << d[s]<< '\n';
+            std::cout << "t is: " << t << ", Distance is " << d[t]<< '\n';
 
             assert(d[t]==(d[s]+1));
             // Take the ordering with maximal difference between s and t
@@ -188,18 +214,25 @@ double SF::minimize(){
             uint nb_intermediary;
             for (uint i = 0; i < all_orders.size(); i++) {
                 nb_intermediary = all_orders[i].nb_intermediary(s, t);
+                if (nb_intermediary >= nb_elements) {
+                    // Fail on graph 4
+                    std::cout << "S position " << all_orders[i].pos_in_ordering(s) << '\n';
+                    std::cout << "T position " << all_orders[i].pos_in_ordering(t) << '\n';
+                    std::cout << "Does the graph contain the edge t-s? " << ordering_graph.exist_edge(s, t) << '\n';
+                    all_orders[i].show_ordering();
+
+                    std::cout << max_nb_intermediary << '\t' << nb_elements << '\n';
+                }
+                assert(nb_intermediary < nb_elements);
+                // I assumed that if s > t, the number of intermediary
+                // is considered to be zero.
+
                 if (nb_intermediary > max_nb_intermediary) {
                     max_nb_intermediary = nb_intermediary;
                     argmax_nb_intermediary = i;
                 }
             }
-            assert(max_nb_intermediary < nb_elements); // what we want
-                                                       // to check is
-                                                       // that it's
-                                                       // less than 0,
-                                                       // but given
-                                                       // that we use
-                                                       // uints
+
 
 
             // Generate new orderings, where in each, one element from
@@ -286,7 +319,13 @@ double SF::minimize(){
                 assert(current[0]==-1);
                 assert(current[current.size()-1]==1);
                 for (uint i=1; i < current.size()-1; i++) {
-                    assert(current[i] == 0);
+                    // if (current[i] != 0) {
+                    //     for (const double& node: current) {
+                    //         std::cout << node  << ' ';
+                    //     }
+                    //     std::cout << '\n';
+                    // }
+                    assert(abs(current[i] - 0)< std::numeric_limits<double>::epsilon());
                 }
                 delta = 0;
                 for (const double& w: new_ord_weights) {
@@ -401,11 +440,11 @@ double SF::minimize(){
 
             if (all_orders.size() > nb_elements + 1) {
                 // Time to do some linear algebra
+                // TODO
                 assert(false);
             }
-
         }
-        break; // Safety break during development
+        std::cout << "\n\n\n";
     }
     return 2;
 }

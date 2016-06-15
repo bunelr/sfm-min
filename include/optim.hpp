@@ -26,6 +26,7 @@ public:
     std::vector<ordering> generate_new_orderings(uint from, uint to) const;
     vec arrange_vector_according_to_ordering(const vec& node_idx_sorted) const;
     uint pos_in_ordering(uint node_idx) const;
+    void show_ordering() const;
 };
 
 
