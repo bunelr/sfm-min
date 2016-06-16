@@ -100,13 +100,23 @@ std::vector<ordering> Order::generate_new_orderings(uint from, uint to) const{
 
 double SF::minimize(){
 
+    // Useful constants
+    uint nb_elements = dimension();
+
     // What we are going to maintain:
     std::vector<Order> all_orders;
     std::vector<double> order_weights;
     vec x;
 
-    // Useful constants
-    uint nb_elements = dimension();
+    // Useful for the invariant
+    std::vector<uint> old_d;
+    std::vector<uint> d(nb_elements, 0);
+    uint old_dt, dt=std::numeric_limits<uint>::max();
+    uint old_t, t=std::numeric_limits<uint>::max();
+    uint old_s, s=std::numeric_limits<uint>::max();
+    uint old_alpha, alpha=std::numeric_limits<uint>::max();
+    uint old_beta, beta=std::numeric_limits<uint>::max();
+
 
     // Initialisation - Create a first dumb ordering
     ordering initial_ordering = generate_random_ordering(nb_elements);
@@ -176,12 +186,15 @@ double SF::minimize(){
             // We will do updates to the ordering
 
             // Compute the distance d(u) from P to each element
-            std::vector<uint> d = ordering_graph.distance_from(P);
+            old_d = d;
+            old_dt = dt;
+            old_t = t;
+            old_s = s;
+            d = ordering_graph.distance_from(P);
             // For each ordering, find t -> biggest that has max d(u)
             uint to_ignore = std::numeric_limits<uint>::max();
             uint max_d=0;
             uint val;
-            uint t;
             for (uint i=0; i < nb_elements; i++) {
                 val = d[i];
                 if (val!=to_ignore) {
@@ -193,8 +206,8 @@ double SF::minimize(){
                     }
                 }
             }
+            dt = d[t];
             //                    find s -> (s,t) is in the graph and d(s) = d(t)-1, biggest
-            uint s;
             for (uint i=0; i < nb_elements; i++) { // PERF: look backward instead of forward -> earlier stopping.
                 val = d[i];
                 if (val == (max_d-1)) {
@@ -209,20 +222,14 @@ double SF::minimize(){
 
             assert(d[t]==(d[s]+1));
             // Take the ordering with maximal difference between s and t
+            old_alpha = alpha;
+            old_beta  = beta;
             uint max_nb_intermediary=0;
+            uint nb_max_intermediary=0;
             uint argmax_nb_intermediary=0;
             uint nb_intermediary;
             for (uint i = 0; i < all_orders.size(); i++) {
                 nb_intermediary = all_orders[i].nb_intermediary(s, t);
-                if (nb_intermediary >= nb_elements) {
-                    // Fail on graph 4
-                    std::cout << "S position " << all_orders[i].pos_in_ordering(s) << '\n';
-                    std::cout << "T position " << all_orders[i].pos_in_ordering(t) << '\n';
-                    std::cout << "Does the graph contain the edge t-s? " << ordering_graph.exist_edge(s, t) << '\n';
-                    all_orders[i].show_ordering();
-
-                    std::cout << max_nb_intermediary << '\t' << nb_elements << '\n';
-                }
                 assert(nb_intermediary < nb_elements);
                 // I assumed that if s > t, the number of intermediary
                 // is considered to be zero.
@@ -230,8 +237,14 @@ double SF::minimize(){
                 if (nb_intermediary > max_nb_intermediary) {
                     max_nb_intermediary = nb_intermediary;
                     argmax_nb_intermediary = i;
+                    nb_max_intermediary = 1;
+                } else if (nb_intermediary == max_nb_intermediary ) {
+                    nb_max_intermediary++;
                 }
             }
+
+            alpha = max_nb_intermediary;
+            beta = nb_max_intermediary;
 
 
 
@@ -444,6 +457,34 @@ double SF::minimize(){
                 assert(false);
             }
         }
+
+        // Invariant checking
+        bool distance_improvement = false;
+        // No distance regression
+        for (uint elt= 0; elt < nb_elements; elt++) {
+            assert(d[elt] >= old_d[elt]);
+            if (d[elt] > old_d[elt]) {
+                distance_improvement = true;
+            }
+        }
+        if (not distance_improvement) {
+            // Lexicographical ordering should hold
+            assert(dt <= old_dt);
+            if (dt == old_dt) {
+                assert(t <= old_t);
+                if (t == old_t) {
+                    assert(s <= old_s);
+                    if (s == old_s) {
+                        assert(alpha <= old_alpha);
+                        if (alpha == old_alpha) {
+                            assert(beta < old_beta);
+                        }
+                    }
+                }
+            }
+        }
+
+
         std::cout << "\n\n\n";
     }
     return 2;
