@@ -421,19 +421,37 @@ double SF::minimize(){
 
             // We now have a valid combination of greedy vectors associated with our orderings.
             // Let's make it diet a bit
-
-            // All the orderings that have zero weight in the current linear combination should be removed
-            uint ordering_index = 0;
-            while (ordering_index < order_weights.size()) {
-                if (order_weights[ordering_index]==0) {
-                    all_orders.erase(all_orders.begin() + ordering_index);
-                    order_weights.erase(order_weights.begin() + ordering_index);
-                } else {
-                    ordering_index++;
+            bool has_removed_all_simple_ones = false;
+            while (order_weights.size() > nb_elements) {
+                // All the orderings that have zero weight in the current linear combination should be removed
+                if (not has_removed_all_simple_ones) {
+                    uint ordering_index = 0;
+                    while (ordering_index < order_weights.size()) {
+                        if (order_weights[ordering_index]==0) {
+                            all_orders.erase(all_orders.begin() + ordering_index);
+                            order_weights.erase(order_weights.begin() + ordering_index);
+                            break;
+                        } else {
+                            ordering_index++;
+                        }
+                    }
+                    if (ordering_index != order_weights.size()) { // This means we have breaked
+                        continue;
+                    } else { // We went to the end without finding a zero
+                        has_removed_all_simple_ones = true;
+                    }
                 }
+
+                if (all_orders.size() > nb_elements) {
+                    // Time to do some linear algebra
+                    // TODO
+                    assert(false);
+                }
+
             }
 
             // Verification code that nothing problematic happened here
+            // while we were removing redundant ordering
             std::fill(reconstructed_x.begin(), reconstructed_x.end(), 0);
             for (uint i=0; i < all_orders.size(); i++) {
                 double weight = order_weights[i];
@@ -451,11 +469,9 @@ double SF::minimize(){
                 assert(abs(reconstructed_x[i] - x[i]) < std::numeric_limits<double>::epsilon());
             }
 
-            if (all_orders.size() > nb_elements + 1) {
-                // Time to do some linear algebra
-                // TODO
-                assert(false);
-            }
+
+
+
         }
 
         // Invariant checking
