@@ -217,8 +217,8 @@ double SF::minimize(){
                     }
                 }
             }
-            std::cout << "s is: " << s << ", Distance is " << d[s]<< '\n';
-            std::cout << "t is: " << t << ", Distance is " << d[t]<< '\n';
+            // std::cout << "s is: " << s << ", Distance is " << d[s]<< '\n';
+            // std::cout << "t is: " << t << ", Distance is " << d[t]<< '\n';
 
             assert(d[t]==(d[s]+1));
             // Take the ordering with maximal difference between s and t
@@ -288,18 +288,18 @@ double SF::minimize(){
                     uint adj_index = j - s_pos;
                     working_matrix[i*nb_elem_considered + adj_index] = order_greedy[j] - ref[j];
                 }
-                for (uint j=s_pos; j < t_pos+1; j++){
-                    uint adj_index = j - s_pos;
-                    std::cout << working_matrix[i*nb_elem_considered +adj_index] << '\t';
-                }
-                std::cout << '\n';
+                // for (uint j=s_pos; j < t_pos+1; j++){
+                //     uint adj_index = j - s_pos;
+                //     std::cout << working_matrix[i*nb_elem_considered +adj_index] << '\t';
+                // }
+                // std::cout << '\n';
             }
 
             if (zero_valid_delta) {
                 new_ord_weights[row_zero_valid_delta] = 1;
                 delta = 0;
                 // Verify that this means that they had the same greedy vector
-                std::cout << "Zero is a valid delta" << '\n';
+                // std::cout << "Zero is a valid delta" << '\n';
                 vec& ref = base_order.greedy_vec;
                 vec& rep = new_orders[row_zero_valid_delta].greedy_vec;
                 for (uint i=0; i<ref.size(); i++) {
@@ -350,12 +350,12 @@ double SF::minimize(){
                     w = w*delta;
                 }
             }
-            std::cout << "Delta is: " << delta << '\n';
-            std::cout << "Weights on the new orderings are: ";
-            for (const double& node: new_ord_weights) {
-                std::cout << node  << ' ';
-            }
-            std::cout << '\n';
+            // std::cout << "Delta is: " << delta << '\n';
+            // std::cout << "Weights on the new orderings are: ";
+            // for (const double& node: new_ord_weights) {
+            //     std::cout << node  << ' ';
+            // }
+            // std::cout << '\n';
 
 
             // Find y
@@ -368,12 +368,12 @@ double SF::minimize(){
             vec new_x;
             double partial_multiplier = 1;
             if (y[t] <= 0) {
-                std::cout << "Gone full y" << '\n';
+                // std::cout << "Gone full y" << '\n';
                 new_x = y;
                 all_orders.erase(all_orders.begin() + argmax_nb_intermediary);
                 order_weights.erase(order_weights.begin() + argmax_nb_intermediary);
             } else {
-                std::cout << "Partially y" << '\n';
+                // std::cout << "Partially y" << '\n';
                 new_x = x;
                 new_x[s] += new_x[t];
                 partial_multiplier = -new_x[t] / delta;
@@ -484,6 +484,11 @@ double SF::minimize(){
             }
         }
         if (not distance_improvement) {
+            std::cout << "(" <<dt << ", " <<
+                t << ", " <<
+                s << ", " <<
+                alpha << ", "<<
+                beta << ")\n";
             // Lexicographical ordering should hold
             assert(dt <= old_dt);
             if (dt == old_dt) {
@@ -498,10 +503,9 @@ double SF::minimize(){
                     }
                 }
             }
+        } else {
+            std::cout << "Distance improvement" << '\n';
         }
-
-
-        std::cout << "\n\n\n";
     }
     return 2;
 }
