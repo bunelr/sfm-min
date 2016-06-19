@@ -10,10 +10,11 @@
 #include "graph.hpp"
 
 void display_subset(const Subset& picked){
+        std::cout << "{";
         for (const uint& node: picked) {
-                std::cout << node  << ' ';
+                std::cout << node  << ",";
         }
-        std::cout << '\n';
+        std::cout << "}" << '\n';
 }
 
 

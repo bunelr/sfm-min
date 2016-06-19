@@ -18,16 +18,22 @@ uint MinCut::dimension() const{
 
 double MinCut::evaluate(const Subset& picked) const{
     // Evaluate the value of the cut proposed
-    double cut_value = 0;
 
     // A cut is determined by the sum of all the outgoing arcs from U
 
-    // We are not allowed to pick the sink in U
+    // We are not allowed to pick the sink in U, and we need to pick the source
     assert(picked.find(sink_node)==picked.end());
 
+
     // And the source necessarily belongs to U
-    Node current_node = graph.nodes[source_node];
-    cut_value += cut_from_node(current_node, picked);
+    Node current_node;
+    double cut_value = 0;
+    if(picked.find(source_node)==picked.end()){
+        current_node = graph.nodes[source_node];
+        cut_value += cut_from_node(current_node, picked);
+    };
+
+
 
     for (const uint& node_idx: picked) {
         current_node = graph.nodes[node_idx];
