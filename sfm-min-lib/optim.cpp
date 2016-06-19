@@ -346,8 +346,8 @@ double SF::minimize(Subset& picked){
                 //     std::cout << node  << ' ';
                 // }
                 // std::cout << '\n';
-                assert(current[0]==-1);
-                assert(current[current.size()-1]==1);
+                assert(abs(current[0]- (-1)) < std::numeric_limits<double>::epsilon());
+                assert(abs(current[current.size()-1] -1) < std::numeric_limits<double>::epsilon());
                 for (uint i=1; i < current.size()-1; i++) {
                     // if (current[i] != 0) {
                     //     for (const double& node: current) {
