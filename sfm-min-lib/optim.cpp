@@ -435,34 +435,24 @@ double SF::minimize(Subset& picked){
 
             // We now have a valid combination of greedy vectors associated with our orderings.
             // Let's make it diet a bit
-            bool has_removed_all_simple_ones = false;
-            while (not has_removed_all_simple_ones) {
-                // All the orderings that have zero weight in the current linear combination should be removed
-                if (not has_removed_all_simple_ones) {
-                    uint ordering_index = 0;
-                    while (ordering_index < order_weights.size()) {
-                        if (order_weights[ordering_index]==0) {
-                            all_orders.erase(all_orders.begin() + ordering_index);
-                            order_weights.erase(order_weights.begin() + ordering_index);
-                            break;
-                        } else {
-                            ordering_index++;
-                        }
-                    }
-                    if (ordering_index != order_weights.size()) { // This means we have breaked
-                        continue;
-                    } else { // We went to the end without finding a zero
-                        has_removed_all_simple_ones = true;
-                    }
-                }
 
-                if (all_orders.size() > nb_elements) {
-                    // Time to do some linear algebra
-                    // TODO
-                    assert(false);
+            // All the orderings that have zero weight in the current linear combination should be removed
+            uint ordering_index = 0;
+            while (ordering_index < order_weights.size()) {
+                if (order_weights[ordering_index]==0) {
+                    all_orders.erase(all_orders.begin() + ordering_index);
+                    order_weights.erase(order_weights.begin() + ordering_index);
+                } else {
+                    ordering_index++;
                 }
-
             }
+
+            if (all_orders.size() > nb_elements) {
+                // Time to do some linear algebra
+                // TODO
+                assert(false);
+            }
+
 
             // Verification code that nothing problematic happened here
             // while we were removing redundant ordering
