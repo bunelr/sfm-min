@@ -98,7 +98,7 @@ std::vector<ordering> Order::generate_new_orderings(uint from, uint to) const{
 
 }
 
-double SF::minimize(){
+double SF::minimize(Subset& picked){
 
     // Useful constants
     uint nb_elements = dimension();
@@ -106,9 +106,10 @@ double SF::minimize(){
     // What we are going to maintain:
     std::vector<Order> all_orders;
     std::vector<double> order_weights;
-    vec x, old_x;
+    vec x, old_x, new_x;
 
     // Useful for the invariant
+    bool invariant_pass;
     std::vector<uint> old_d, d(nb_elements, 0);
     Graph old_ordering_graph, ordering_graph;
     Subset P,N, neutral, old_P, old_N, old_neutral;
@@ -194,8 +195,9 @@ double SF::minimize(){
                 }
             }
 
-            std::cout << "Found a solution" << '\n';
             // Compute the value by summming all x(N) now
+            picked = N;
+            return evaluate(picked);
             // TODO
             break;
         } else {
@@ -223,7 +225,6 @@ double SF::minimize(){
                 }
             }
             dt = d[t];
-            std::cout << "x[t] is " << x[t] << '\n';
             //                    find s -> (s,t) is in the graph and d(s) = d(t)-1, biggest
             for (uint i=0; i < nb_elements; i++) { // PERF: look backward instead of forward -> earlier stopping.
                 val = d[i];
@@ -243,8 +244,10 @@ double SF::minimize(){
             uint nb_max_intermediary=0;
             uint argmax_nb_intermediary=0;
             uint nb_intermediary;
+            //std::cout << "All the intermediaries:" << '\n';
             for (uint i = 0; i < all_orders.size(); i++) {
                 nb_intermediary = all_orders[i].nb_intermediary(s, t);
+                //std::cout << nb_intermediary << ' ';
                 assert(nb_intermediary < nb_elements);
                 // I assumed that if s > t, the number of intermediary
                 // is considered to be zero.
@@ -257,6 +260,7 @@ double SF::minimize(){
                     nb_max_intermediary++;
                 }
             }
+            //std::cout << '\n';
             alpha = max_nb_intermediary;
             beta = nb_max_intermediary;
 
@@ -308,7 +312,6 @@ double SF::minimize(){
                 // }
                 // std::cout << '\n';
             }
-
             if (zero_valid_delta) {
                 new_ord_weights[row_zero_valid_delta] = 1;
                 delta = 0;
@@ -361,7 +364,7 @@ double SF::minimize(){
                 }
                 delta = 1/delta; // We want a convex combinations so all things must sum to one
                 for (double& w: new_ord_weights) {
-                    w = w*delta;
+                    w *= delta;
                 }
             }
             // std::cout << "Delta is: " << delta << '\n';
@@ -379,22 +382,20 @@ double SF::minimize(){
             y[t] += lambda_1 * delta;
 
             // Find the new value of x -> x' by taking the point closest to y that has x'(t) =< 0
-            vec new_x;
             double partial_multiplier = 1;
             if (y[t] <= 0) {
                 // std::cout << "Gone full y" << '\n';
                 new_x = y;
                 order_weights[argmax_nb_intermediary] = 0;
             } else {
-                // std::cout << "Partially y" << '\n';
                 new_x = x;
                 new_x[s] += new_x[t];
-                partial_multiplier = -new_x[t] / delta;
+                partial_multiplier = -new_x[t] / (delta*lambda_1);
                 new_x[t] = 0;
                 // Because we are only doing a partial application of our update vector,
                 // we need to keep the original ordering, to preserve convexity of the combination.
                 // (As opposed to the other branch where we can get rid of it)
-                order_weights[argmax_nb_intermediary] *= (1-partial_multiplier);
+                order_weights[argmax_nb_intermediary] = lambda_1 * (1-partial_multiplier);
             }
 
 
@@ -422,6 +423,7 @@ double SF::minimize(){
                     reconstructed_x[j] += weight * greedy_vec[j];
                 }
             }
+
             for (uint i=0; i < nb_elements; i++) {
                 if (abs(reconstructed_x[i] - new_x[i]) > std::numeric_limits<double>::epsilon()) {
                     std::cout << "Error at position " << i <<
@@ -430,12 +432,11 @@ double SF::minimize(){
                 }
                 assert(abs(reconstructed_x[i] - new_x[i]) < std::numeric_limits<double>::epsilon());
             }
-            x = new_x;
 
             // We now have a valid combination of greedy vectors associated with our orderings.
             // Let's make it diet a bit
             bool has_removed_all_simple_ones = false;
-            while (order_weights.size() > nb_elements) {
+            while (not has_removed_all_simple_ones) {
                 // All the orderings that have zero weight in the current linear combination should be removed
                 if (not has_removed_all_simple_ones) {
                     uint ordering_index = 0;
@@ -474,12 +475,12 @@ double SF::minimize(){
                 }
             }
             for (uint i=0; i < nb_elements; i++) {
-                if (abs(reconstructed_x[i] - x[i]) > std::numeric_limits<double>::epsilon()) {
+                if (abs(reconstructed_x[i] - new_x[i]) > std::numeric_limits<double>::epsilon()) {
                     std::cout << "Error at position " << i <<
                         ": "<<  reconstructed_x[i] <<
-                        " versus " << x[i] << '\n';
+                        " versus " << new_x[i] << '\n';
                 }
-                assert(abs(reconstructed_x[i] - x[i]) < std::numeric_limits<double>::epsilon());
+                assert(abs(reconstructed_x[i] - new_x[i]) < std::numeric_limits<double>::epsilon());
             }
 
 
@@ -488,57 +489,67 @@ double SF::minimize(){
         }
 
         // Invariant checking
+        // std::cout << "(dt,t, s, a, b)" << '\n';
+        std::cout << "(" <<dt << ", " <<
+            t << ", " <<
+            s << ", " <<
+            alpha << ", "<<
+            beta << ")\n";
+        // std::cout << "x: [";
+        // for (double x_val: old_x) {
+        //     std::cout << x_val << ',';
+        // }; std::cout << "]\n";
+
         bool distance_improvement = false;
         // No distance regression
         for (uint elt= 0; elt < nb_elements; elt++) {
             assert(d[elt] >= old_d[elt]);
             if (d[elt] > old_d[elt]) {
                 distance_improvement = true;
+                invariant_pass = true;
             }
         }
         if (not distance_improvement) {
-            std::cout << "(dt,t, s, a, b)" << '\n';
-            std::cout << "(" <<dt << ", " <<
-                t << ", " <<
-                s << ", " <<
-                alpha << ", "<<
-                beta << ")\n";
-
-            std::cout << "x: [";
-            for (double x_val: old_x) {
-                std::cout << x_val << ',';
-            }; std::cout << "]\n";
-
-
-            assert(x[t]<0);
-            assert(old_x[t]<0 or t==old_s);
-            assert(old_d[s]<old_d[t]);
-            assert(old_d[t] <= old_d[old_t]);
-            if (old_d[t]==old_d[old_t]) {
-                assert(t <= old_t);
-            }
-            if (old_d[t]==old_d[old_t] and t == old_t) {
-                // Assert s, old_t in A
-            }
-
-
-            // Lexicographical ordering should hold
-            assert(dt <= old_dt);
-            if (dt == old_dt) {
-                assert(t <= old_t);
-                if (t == old_t) {
+            if(invariant_pass){
+                // I'm not entirely sure of the offset
+                invariant_pass=false;
+            } else {
+                assert(x[t]<0);
+                assert(old_x[t]<0 or t==old_s);
+                assert(old_d[s]<old_d[t]);
+                assert(old_d[t] <= old_d[old_t]);
+                if (old_d[t]==old_d[old_t]) {
+                    assert(t <= old_t);
+                }
+                if (old_d[t]==old_d[old_t] and t == old_t) {
+                    // Assert s, old_t in A'
+                    assert(ordering_graph.exist_edge(s, old_t));
+                    // Assert s, old_t was in A
+                    assert(old_ordering_graph.exist_edge(s, old_t));
+                    // From it, we conclude that
                     assert(s <= old_s);
-                    if (s == old_s) {
-                        assert(alpha <= old_alpha);
-                        if (alpha == old_alpha) {
-                            assert(beta < old_beta);
+                }
+
+
+                // Lexicographical ordering should hold
+                assert(dt <= old_dt);
+                if (dt == old_dt) {
+                    assert(t <= old_t);
+                    if (t == old_t) {
+                        assert(s <= old_s);
+                        if (s == old_s) {
+                            assert(alpha <= old_alpha);
+                            if (alpha == old_alpha) {
+                                assert(beta < old_beta);
+                            }
                         }
                     }
                 }
             }
+
         } else {
             std::cout << "Distance improvement" << '\n';
         }
+        x = new_x;
     }
-    return 2;
 }

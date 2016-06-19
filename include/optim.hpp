@@ -12,7 +12,7 @@ class SF{
 public:
     virtual double evaluate(const Subset& picked) const= 0;
     virtual uint dimension() const =0;
-    double minimize();
+    double minimize(Subset& picked);
 };
 
 class Order{

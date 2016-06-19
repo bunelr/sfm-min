@@ -15,8 +15,10 @@ int main(int argc, char *argv[])
 
     // Min-cut, as a submodular function that we don't know
     // Using Schrijver's algorithm
-    double min_value = mc_pb->minimize();
-    // std::cout << "Value computed by Schrijver's algorithm: " << min_value << '\n';
+    picked.clear();
+    double min_value = mc_pb->minimize(picked);
+    std::cout << "Value computed by Schrijver's algorithm: " << min_value << '\n';
+    display_subset(picked);
 
     return 0;
 }
