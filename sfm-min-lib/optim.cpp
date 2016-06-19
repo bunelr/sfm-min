@@ -106,11 +106,12 @@ double SF::minimize(){
     // What we are going to maintain:
     std::vector<Order> all_orders;
     std::vector<double> order_weights;
-    vec x;
+    vec x, old_x;
 
     // Useful for the invariant
-    std::vector<uint> old_d;
-    std::vector<uint> d(nb_elements, 0);
+    std::vector<uint> old_d, d(nb_elements, 0);
+    Graph old_ordering_graph, ordering_graph;
+    Subset P,N, neutral, old_P, old_N, old_neutral;
     uint old_dt, dt=std::numeric_limits<uint>::max();
     uint old_t, t=std::numeric_limits<uint>::max();
     uint old_s, s=std::numeric_limits<uint>::max();
@@ -123,13 +124,29 @@ double SF::minimize(){
     Order first_order(initial_ordering, this);
     all_orders.push_back(first_order);
     order_weights.push_back(1);
+    old_x = first_order.greedy_vec;
     x = first_order.greedy_vec;
 
 
     // Start iterating
     while (true) {
+        // Move the current value to the old_* container.
+        old_x = x;
+        old_d = d;
+        old_ordering_graph = ordering_graph;
+        old_dt = dt;
+        old_t = t;
+        old_s = s;
+        old_alpha = alpha;
+        old_beta = beta;
+        old_P = P;
+        old_N = N;
+        old_neutral = neutral;
+
+
+
         // Build directed graph based on the ordering
-        Graph ordering_graph(nb_elements);
+        ordering_graph = Graph(nb_elements);
         uint node_from, node_to;
         for(const Order& order: all_orders){ // For each of the ordering
             for (uint from=0;from<nb_elements; ++from) {  // Add an edge from each node to all nodes after him
@@ -145,7 +162,7 @@ double SF::minimize(){
         }
 
         // Identify subsets P {u s.t. x(u) > 0}  and N {u s.t. x(u) < 0}
-        Subset P,N, neutral;
+        P.clear();N.clear();neutral.clear();
         for (uint i=0; i<nb_elements; ++i) {
             if (x.at(i) > 0) {
                 P.insert(i);
@@ -186,16 +203,15 @@ double SF::minimize(){
             // We will do updates to the ordering
 
             // Compute the distance d(u) from P to each element
-            old_d = d;
-            old_dt = dt;
-            old_t = t;
-            old_s = s;
             d = ordering_graph.distance_from(P);
             // For each ordering, find t -> biggest that has max d(u)
             uint to_ignore = std::numeric_limits<uint>::max();
             uint max_d=0;
             uint val;
             for (uint i=0; i < nb_elements; i++) {
+                if (N.find(i)==N.end()) { // Only interested in finding it in N
+                    continue;
+                }
                 val = d[i];
                 if (val!=to_ignore) {
                     if (val>max_d) {
@@ -207,6 +223,7 @@ double SF::minimize(){
                 }
             }
             dt = d[t];
+            std::cout << "x[t] is " << x[t] << '\n';
             //                    find s -> (s,t) is in the graph and d(s) = d(t)-1, biggest
             for (uint i=0; i < nb_elements; i++) { // PERF: look backward instead of forward -> earlier stopping.
                 val = d[i];
@@ -222,8 +239,6 @@ double SF::minimize(){
 
             assert(d[t]==(d[s]+1));
             // Take the ordering with maximal difference between s and t
-            old_alpha = alpha;
-            old_beta  = beta;
             uint max_nb_intermediary=0;
             uint nb_max_intermediary=0;
             uint argmax_nb_intermediary=0;
@@ -242,7 +257,6 @@ double SF::minimize(){
                     nb_max_intermediary++;
                 }
             }
-
             alpha = max_nb_intermediary;
             beta = nb_max_intermediary;
 
@@ -370,8 +384,7 @@ double SF::minimize(){
             if (y[t] <= 0) {
                 // std::cout << "Gone full y" << '\n';
                 new_x = y;
-                all_orders.erase(all_orders.begin() + argmax_nb_intermediary);
-                order_weights.erase(order_weights.begin() + argmax_nb_intermediary);
+                order_weights[argmax_nb_intermediary] = 0;
             } else {
                 // std::cout << "Partially y" << '\n';
                 new_x = x;
@@ -484,11 +497,31 @@ double SF::minimize(){
             }
         }
         if (not distance_improvement) {
+            std::cout << "(dt,t, s, a, b)" << '\n';
             std::cout << "(" <<dt << ", " <<
                 t << ", " <<
                 s << ", " <<
                 alpha << ", "<<
                 beta << ")\n";
+
+            std::cout << "x: [";
+            for (double x_val: old_x) {
+                std::cout << x_val << ',';
+            }; std::cout << "]\n";
+
+
+            assert(x[t]<0);
+            assert(old_x[t]<0 or t==old_s);
+            assert(old_d[s]<old_d[t]);
+            assert(old_d[t] <= old_d[old_t]);
+            if (old_d[t]==old_d[old_t]) {
+                assert(t <= old_t);
+            }
+            if (old_d[t]==old_d[old_t] and t == old_t) {
+                // Assert s, old_t in A
+            }
+
+
             // Lexicographical ordering should hold
             assert(dt <= old_dt);
             if (dt == old_dt) {
