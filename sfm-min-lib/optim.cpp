@@ -11,7 +11,7 @@ ordering generate_random_ordering(uint size){
     for (uint i=0; i < size; i++) {
         initial_ordering.at(i) = i;
     }
-    //std::random_shuffle(initial_ordering.begin(), initial_ordering.end());
+    std::random_shuffle(initial_ordering.begin(), initial_ordering.end());
     return initial_ordering;
 }
 
