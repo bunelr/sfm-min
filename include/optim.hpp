@@ -1,11 +1,8 @@
 #ifndef OPTIM
 #define OPTIM
-#include "graph.hpp"
 #include <vector>
-
-
-typedef std::vector<uint> ordering;
-typedef std::vector<double> vec;
+#include "graph.hpp"
+#include "types.hpp"
 
 class SF{
 

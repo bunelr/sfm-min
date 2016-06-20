@@ -1,9 +1,10 @@
-#include "optim.hpp"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
 #include <limits>
 #include <cassert>
+#include "optim.hpp"
+#include "linalg.hpp"
 
 ordering generate_random_ordering(uint size){
     ordering initial_ordering(size);
@@ -447,10 +448,30 @@ double SF::minimize(Subset& picked){
                 }
             }
 
-            if (all_orders.size() > nb_elements) {
-                // Time to do some linear algebra
-                // TODO
-                assert(false);
+            while (all_orders.size() > nb_elements) {
+                // This is horribly inefficient
+                // We reduce the dimension by 1 every time, while we could do much more.
+                // We probably would want to reduce it as much as possible.
+                std::vector<vec> all_greedys;
+                for (Order ord: all_orders) {
+                    all_greedys.push_back(ord.greedy_vec);
+                }
+                reduce_form(all_greedys, order_weights);
+
+                // All the orderings that have been set to zero
+                uint ordering_index = 0;
+                bool removed_one = false;
+                while (ordering_index < order_weights.size()) {
+                    if (order_weights[ordering_index]==0) {
+                        all_orders.erase(all_orders.begin() + ordering_index);
+                        order_weights.erase(order_weights.begin() + ordering_index);
+                        removed_one = true;
+                        break;
+                    } else {
+                        ordering_index++;
+                    }
+                }
+                assert(removed_one);
             }
 
 

@@ -16,4 +16,4 @@ include_directories(min-cut-pb)
 
 # Executable
 add_executable(sfm-min-run main.cpp)
-target_link_libraries(sfm-min-run sfm-min-lib min-cut)
+target_link_libraries(sfm-min-run sfm-min-lib min-cut linalg)

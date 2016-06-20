@@ -1,13 +1,9 @@
 #ifndef GRAPH
 #define GRAPH
 #include<vector>
-#include <unordered_set>
-
-typedef std::unordered_set<uint> Subset;
+#include "types.hpp"
 
 void display_subset(const Subset&);
-
-typedef unsigned int uint;
 
 class Edge {
 public:
