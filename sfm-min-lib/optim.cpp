@@ -501,11 +501,11 @@ double SF::minimize(Subset& picked){
 
         // Invariant checking
         // std::cout << "(dt,t, s, a, b)" << '\n';
-        std::cout << "(" <<dt << ", " <<
-            t << ", " <<
-            s << ", " <<
-            alpha << ", "<<
-            beta << ")\n";
+        // std::cout << "(" <<dt << ", " <<
+        //     t << ", " <<
+        //     s << ", " <<
+        //     alpha << ", "<<
+        //     beta << ")\n";
         // std::cout << "x: [";
         // for (double x_val: old_x) {
         //     std::cout << x_val << ',';
@@ -559,7 +559,7 @@ double SF::minimize(Subset& picked){
             }
 
         } else {
-            std::cout << "Distance improvement" << '\n';
+            //std::cout << "Distance improvement" << '\n';
         }
         x = new_x;
     }
