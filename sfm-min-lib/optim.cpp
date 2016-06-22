@@ -150,18 +150,26 @@ double SF::minimize(Subset& picked){
         // Build directed graph based on the ordering
         ordering_graph = Graph(nb_elements);
         uint node_from, node_to;
+        std::vector<bool> existing_edges(nb_elements*nb_elements, false);
         for(const Order& order: all_orders){ // For each of the ordering
             for (uint from=0;from<nb_elements; ++from) {  // Add an edge from each node to all nodes after him
+                node_from = order.at(from);
                 for (uint to=from+1; to<nb_elements; ++to) {
-                    node_from = order.at(from);
                     node_to = order.at(to);
-                    if (not ordering_graph.exist_edge(node_from, node_to)) {
-                        Edge new_edge(node_from, node_to, 1);
-                        ordering_graph.add_edge(new_edge);
-                    }
+                    existing_edges[node_from* nb_elements + node_to]=true;
                 }
             }
         }
+        Edge new_edge;
+        for (uint node_from=0; node_from < nb_elements; node_from++) {
+            for (uint node_to=0; node_to < nb_elements; node_to++) {
+                if (existing_edges[node_from*nb_elements + node_to]) {
+                    new_edge = Edge(node_from, node_to, 1);
+                    ordering_graph.add_edge(new_edge);
+                }
+            }
+        }
+
 
         // Identify subsets P {u s.t. x(u) > 0}  and N {u s.t. x(u) < 0}
         P.clear();N.clear();neutral.clear();
@@ -199,8 +207,6 @@ double SF::minimize(Subset& picked){
             // Compute the value by summming all x(N) now
             picked = N;
             return evaluate(picked);
-            // TODO
-            break;
         } else {
             // There is a path from P to N
             // We will do updates to the ordering
