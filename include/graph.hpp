@@ -1,6 +1,7 @@
 #ifndef GRAPH
 #define GRAPH
-#include<vector>
+#include <vector>
+#include <unordered_set>
 #include "types.hpp"
 
 void display_subset(const Subset&);
@@ -22,6 +23,7 @@ class Node {
 public:
         uint id;
         std::vector<Edge> outarcs;
+        std::unordered_set<uint> descendants;
 
         Node(uint x, std::vector<Edge> outarcs);
         Node(){};
