@@ -37,11 +37,15 @@ void Graph::add_edge(Edge edge){
                 assert(existing_edge.to != edge.to);// Maybe should replace this with exceptions
         }
         nodes.at(edge.from).outarcs.push_back(edge);
-        nodes.at(edge.from).descendants.insert(edge.to);
 }
 
 bool Graph::exist_edge(uint from, uint to){
-        return (nodes.at(from).descendants.count(to)>0);
+        for (const Edge& existing_edge: nodes.at(from).outarcs) {
+                if (existing_edge.to == to) {
+                        return true;
+                }
+        }
+        return false;
 }
 
 Graph::Graph(std::string path){
@@ -64,10 +68,6 @@ Graph::Graph(std::string path){
                         current_to++;
                 }
                 Node  new_node = Node(current_from, outarcs);
-                for (const Edge& edge: outarcs) {
-                        new_node.descendants.insert(edge.to);
-                }
-
                 nodes.push_back(new_node);
                 current_from++;
         }
